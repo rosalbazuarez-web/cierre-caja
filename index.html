@@ -60,8 +60,10 @@
       </div>
       <label>Tu nombre</label>
       <input id="vend" autocomplete="name" placeholder="ej. Kathiana" style="font-size:1.1rem">
-      <label>Clave</label>
-      <input id="pin" inputmode="numeric" autocomplete="off" placeholder="la que te dieron" style="font-size:1.1rem">
+      <div id="boxPin" class="hide">
+        <label>Clave</label>
+        <input id="pin" inputmode="numeric" autocomplete="off" placeholder="la que te dieron" style="font-size:1.1rem">
+      </div>
     </div>
     <div class="paso quien hide" id="resumenQuien"><div><b id="qSuc"></b> · <span id="qNom"></span></div><a id="cambiar">cambiar</a></div>
 
@@ -71,6 +73,11 @@
         <div><label>Débito ($)</label><input id="dm" inputmode="numeric" placeholder="0"></div>
         <div><label>Crédito ($)</label><input id="cm" inputmode="numeric" placeholder="0"></div>
       </div>
+    </div>
+    <div class="paso">
+      <h2>Transferencias</h2>
+      <label>Total recibido por transferencia ($)</label>
+      <input id="tr" inputmode="numeric" placeholder="0">
     </div>
     <div class="paso">
       <h2>Efectivo</h2>
@@ -117,15 +124,23 @@ async function abrirCfg(pin) {
     return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64(CFG.i) }, k, b64(CFG.c))));
   } catch (e) { return null; }
 }
-if (ls.get('pin')) abrirCfg(ls.get('pin')).then(c => { cfg = c; if (!c) { ls.set('pin', ''); ls.set('vend', ''); mostrarQuien(); } });
+// La clave viene dentro del link (…/#clave): se guarda sola la primera vez y no hay que escribirla.
+(async () => {
+  const delLink = decodeURIComponent(location.hash.slice(1)).trim();
+  if (delLink) { const c = await abrirCfg(delLink); if (c) { cfg = c; ls.set('pin', delLink); } }
+  if (!cfg && ls.get('pin')) { cfg = await abrirCfg(ls.get('pin')); if (!cfg) ls.set('pin', ''); }
+  // Solo se pide a mano si el link llegó sin clave (por ejemplo, la app recién instalada en iPhone).
+  $('boxPin').classList.toggle('hide', !!cfg);
+  mostrarQuien();
+})();
 function mostrarQuien() {
-  const listo = ls.get('suc') && ls.get('vend') && ls.get('pin');
+  const listo = ls.get('suc') && ls.get('vend') && (cfg || ls.get('pin'));
   $('cardQuien').classList.toggle('hide', !!listo); $('resumenQuien').classList.toggle('hide', !listo);
   if (listo) { $('qSuc').textContent = NOMBRE[ls.get('suc')]; $('qNom').textContent = ls.get('vend'); }
 }
 $('cambiar').onclick = () => { $('cardQuien').classList.remove('hide'); $('resumenQuien').classList.add('hide'); elegirSuc(ls.get('suc')); $('vend').value = ls.get('vend'); };
 elegirSuc(ls.get('suc')); $('vend').value = ls.get('vend'); mostrarQuien();
-$('otro').onclick = () => { $('listo').classList.add('hide'); $('form').classList.remove('hide'); ['dm','cm','contado','egresos','detalle'].forEach(i => $(i).value = ''); window.scrollTo(0, 0); };
+$('otro').onclick = () => { $('listo').classList.add('hide'); $('form').classList.remove('hide'); ['dm','cm','tr','contado','egresos','detalle'].forEach(i => $(i).value = ''); window.scrollTo(0, 0); };
 
 $('verEgr').onclick = () => { $('boxEgr').classList.remove('hide'); $('verEgr').classList.add('hide'); };
 
@@ -138,13 +153,14 @@ $('enviar').onclick = async () => {
   if (!s) return mostrarError('Elige dónde estás: Casa Matriz o Antonio Varas.');
   if (!nombre) return mostrarError('Escribe tu nombre.');
   if ($('dm').value.trim() === '' || $('cm').value.trim() === '') return mostrarError('Escribe el débito y el crédito del papel (si no hubo, pon 0).');
+  if ($('tr').value.trim() === '') return mostrarError('Escribe el total de transferencias (si no hubo, pon 0).');
   if ($('contado').value.trim() === '') return mostrarError('Escribe el efectivo que contaste (si no hay, pon 0).');
   if (!cfg) {
     const pin = $('pin').value.trim();
-    if (!pin) return mostrarError('Escribe la clave.');
+    if (!pin) { $('boxPin').classList.remove('hide'); return mostrarError('Escribe la clave.'); }
     cfg = await abrirCfg(pin);
     if (!cfg) return mostrarError('Clave incorrecta.');
-    ls.set('pin', pin);
+    ls.set('pin', pin); $('boxPin').classList.add('hide');
   }
   ls.set('suc', s); ls.set('vend', nombre); mostrarQuien();
   const fecha = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Santiago' });
@@ -155,13 +171,14 @@ $('enviar').onclick = async () => {
     'Vendedor: ' + nombre,
     'Débito: ' + num($('dm').value),
     'Crédito: ' + num($('cm').value),
+    'Transferencia: ' + num($('tr').value),
     'Efectivo contado: ' + num($('contado').value),
     'Egresos: ' + egr + (egr && $('detalle').value.trim() ? ' (' + $('detalle').value.trim() + ')' : '')].join('\
 ');
   const url = 'https://wa.me/' + cfg.wa + '?text=' + encodeURIComponent(txt);
   $('abrirWa').href = url;
   // Copia al bot «Cuadre de Caja Patagonia», que lo cuadra contra Bsale. El vendedor no ve el resultado.
-  try { fetch('https://ntfy.sh/' + cfg.canal, { method: 'POST', keepalive: true, body: JSON.stringify({ suc: s, fecha: fecha, vendedor: nombre, debito: num($('dm').value), credito: num($('cm').value), contado: num($('contado').value), egresos: egr, detalle: $('detalle').value.trim() }) }).catch(() => {}); } catch (e) {}
+  try { fetch('https://ntfy.sh/' + cfg.canal, { method: 'POST', keepalive: true, body: JSON.stringify({ suc: s, fecha: fecha, vendedor: nombre, debito: num($('dm').value), credito: num($('cm').value), transferencia: num($('tr').value), contado: num($('contado').value), egresos: egr, detalle: $('detalle').value.trim() }) }).catch(() => {}); } catch (e) {}
   $('form').classList.add('hide'); $('listo').classList.remove('hide'); window.scrollTo(0, 0);
   $('abrirWa').click();
 };
@@ -173,7 +190,14 @@ let pedirInst = null;
 addEventListener('beforeinstallprompt', e => { e.preventDefault(); pedirInst = e; if (!enApp) { $('instalar').classList.remove('hide'); $('instBtn').classList.remove('hide'); } });
 $('instBtn').onclick = async () => { if (!pedirInst) return; pedirInst.prompt(); await pedirInst.userChoice; pedirInst = null; $('instalar').classList.add('hide'); };
 addEventListener('appinstalled', () => $('instalar').classList.add('hide'));
-if (!enApp && /iphone|ipad|ipod/i.test(navigator.userAgent)) {
+const esIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+if (esIOS && !enApp) {
+  // En iPhone la app instalada no comparte memoria con Safari: se guarda el link completo (con la clave)
+  // para que al abrirla desde el ícono tampoco haya que escribirla.
+  const man = document.querySelector('link[rel="manifest"]'); if (man) man.remove();
+  setTimeout(() => { if (cfg && ls.get('pin') && !location.hash) history.replaceState(null, '', '#' + encodeURIComponent(ls.get('pin'))); }, 1500);
+}
+if (!enApp && esIOS) {
   $('instTxt').innerHTML = 'Toca <b>Compartir</b> (el cuadrado con la flecha) y luego <b>«Agregar a inicio»</b>.';
   $('instalar').classList.remove('hide');
 }
