@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cierre de caja · Patagonia Explorer</title>
+<meta name="theme-color" content="#14402b">
+<meta name="robots" content="noindex,nofollow">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Cierre Caja">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+  :root{--bg:#f3efe7;--card:#fff;--tx:#1e1b14;--mut:#6b6657;--bd:#ddd6c6;--hd:#14402b;--ac:#2e7d55;--ok:#14602f;--okbg:#ddf0e4;--mal:#9a3412;--malbg:#f6e1da}
+  @media (prefers-color-scheme:dark){:root{--bg:#14171a;--card:#1d2226;--tx:#eceff2;--mut:#98a3ae;--bd:#2f363c;--hd:#0f2e20;--ac:#3fbf8f;--ok:#5fd18f;--okbg:#17331f;--mal:#ff8b82;--malbg:#3b1a18}}
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--tx);font:18px/1.4 system-ui,Segoe UI,Arial,sans-serif}
+  header{background:var(--hd);padding:calc(12px + env(safe-area-inset-top)) 16px 12px;display:flex;align-items:center;gap:16px}
+  header img{height:46px} header h1{margin:0;font-size:1.3rem;color:#fff;font-weight:600} header p{margin:0;font-size:.8rem;color:#b7d4c2}
+  main{max-width:520px;margin:0 auto;padding:14px}
+  .paso{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:16px;margin-bottom:12px}
+  .num{display:inline-block;width:28px;height:28px;border-radius:99px;background:var(--hd);color:#fff;text-align:center;line-height:28px;font-weight:700;margin-right:8px;font-size:.95rem}
+  h2{font-size:1.05rem;margin:0 0 4px;display:flex;align-items:center} .mut{color:var(--mut);font-size:.85rem;margin:2px 0 0}
+  label{display:block;font-size:.9rem;color:var(--mut);margin:12px 0 4px}
+  input{width:100%;padding:15px 14px;border:2px solid var(--bd);border-radius:12px;background:var(--bg);color:var(--tx);font:inherit;font-size:1.3rem}
+  input:focus{outline:none;border-color:var(--ac)}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  button{width:100%;background:var(--ac);color:#fff;border:0;border-radius:14px;padding:18px;font:inherit;font-weight:700;font-size:1.15rem;cursor:pointer;margin-top:8px}
+  button.sec{background:transparent;color:var(--ac);border:2px solid var(--ac);padding:15px}
+  button.suc{background:var(--bg);color:var(--tx);border:2px solid var(--bd);margin-top:0}
+  button.suc.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+  button:disabled{opacity:.55}
+  .err{background:var(--malbg);color:var(--mal);padding:12px 14px;border-radius:12px;margin-top:10px;font-size:1rem}
+  .thumbs{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px} .thumbs div{position:relative} .thumbs img{width:90px;height:90px;object-fit:cover;border-radius:12px;border:1px solid var(--bd)}
+  .thumbs b{position:absolute;top:-6px;right:-6px;background:var(--mal);color:#fff;border-radius:99px;width:24px;height:24px;text-align:center;line-height:24px;cursor:pointer;font-size:.85rem}
+  .quien{display:flex;justify-content:space-between;align-items:center;gap:10px} .quien a{color:var(--ac);font-size:.9rem;cursor:pointer;text-decoration:underline}
+  .ok{background:var(--okbg);color:var(--ok);padding:34px 18px;border-radius:16px;text-align:center} .ok h2{justify-content:center;color:var(--ok);font-size:1.5rem}
+  .hide{display:none}
+  .instalar{background:var(--okbg);color:var(--ok);border:1px solid var(--bd);border-radius:16px;padding:14px 16px;margin-bottom:12px;font-size:.95rem}
+  .instalar button{margin-top:10px;padding:14px}
+</style>
+</head>
+<body>
+<header><img alt="Patagonia Explorer" src="icons/logo.png"><div><h1>Cierre de caja</h1><p id="sub">Point y efectivo</p></div></header>
+<main>
+  <div id="instalar" class="instalar hide">
+    <b>Deja esta app en tu celular</b>
+    <div id="instTxt">Así la abres con un toque, como cualquier app.</div>
+    <button id="instBtn" type="button" class="hide">Instalar app</button>
+  </div>
+  <div id="form">
+    
+    <div class="paso" id="cardQuien">
+      <h2>¿Dónde estás?</h2>
+      <div class="row" style="margin-top:10px">
+        <button class="suc" id="s1" type="button">Casa Matriz</button>
+        <button class="suc" id="s2" type="button">Antonio Varas</button>
+      </div>
+      <label>Tu nombre</label>
+      <input id="vend" autocomplete="name" placeholder="ej. Kathiana" style="font-size:1.1rem">
+      <label>Clave</label>
+      <input id="pin" inputmode="numeric" autocomplete="off" placeholder="la que te dieron" style="font-size:1.1rem">
+    </div>
+    <div class="paso quien hide" id="resumenQuien"><div><b id="qSuc"></b> · <span id="qNom"></span></div><a id="cambiar">cambiar</a></div>
+
+    <div class="paso">
+      <h2>Cierre del Point</h2>
+      <div class="row">
+        <div><label>Débito ($)</label><input id="dm" inputmode="numeric" placeholder="0"></div>
+        <div><label>Crédito ($)</label><input id="cm" inputmode="numeric" placeholder="0"></div>
+      </div>
+    </div>
+    <div class="paso">
+      <h2>Efectivo</h2>
+      <label>Efectivo contado en la caja ($)</label>
+      <input id="contado" inputmode="numeric" placeholder="0">
+      <a id="verEgr" class="mut" style="display:inline-block;margin-top:12px;text-decoration:underline;cursor:pointer">+ hubo egresos</a>
+      <div id="boxEgr" class="hide">
+        <div class="row">
+          <div><label>Egresos ($)</label><input id="egresos" inputmode="numeric" placeholder="0"></div>
+          <div><label>¿En qué?</label><input id="detalle" placeholder="ej. Tatiana" style="font-size:1.05rem"></div>
+        </div>
+      </div>
+    </div>
+    <button id="enviar" type="button">Cuadrar caja</button>
+    <div id="err" class="err hide"></div>
+  </div>
+
+  <div id="listo" class="ok hide">
+    <h2>Falta un paso: envía el mensaje</h2>
+    <p style="margin:6px 0 0">Se abrió WhatsApp con tu cierre ya escrito. <b>Toca el botón verde de enviar.</b> Si tienes la foto del Point, adjúntala en ese chat.</p>
+    <a id="abrirWa" href="#" target="_blank" rel="noopener" style="display:block;margin-top:16px;background:#25d366;color:#fff;text-decoration:none;font-weight:700;padding:16px;border-radius:14px">Abrir WhatsApp de nuevo</a>
+    <button id="otro" class="sec" type="button" style="margin-top:14px">Hacer otro cierre</button>
+  </div>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+let fotos = [], suc = '';
+const ls = { get: k => { try { return localStorage.getItem(k) || '' } catch (e) { return '' } }, set: (k, v) => { try { localStorage.setItem(k, v) } catch (e) {} } };
+const NOMBRE = { '1': 'Casa Matriz', '2': 'Antonio Varas' };
+const num = s => Number(String(s || '').replace(/[^\d]/g, ''));
+
+function elegirSuc(v) { suc = v; $('s1').classList.toggle('on', v === '1'); $('s2').classList.toggle('on', v === '2'); }
+$('s1').onclick = () => elegirSuc('1'); $('s2').onclick = () => elegirSuc('2');
+
+const CFG = {"s":"pcD6paVkkb6zOHOJv79xEQ==","i":"mLZcQaC1rBcYtA2/","c":"wLwzY6+5Haimq21ZZU3d7aguTNN7SaPBOz3OcaZy/RdpD0TgfIdNhIrbScOfcAEmUMNAKdkixczenUXXSGQEjysTdHQzhHIq8u700dDxZxJ9"};
+let cfg = null;
+const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+// Los datos de envío van cifrados con la clave de los vendedores: sin la clave, la página no sirve.
+async function abrirCfg(pin) {
+  try {
+    const km = await crypto.subtle.importKey('raw', new TextEncoder().encode(pin), 'PBKDF2', false, ['deriveKey']);
+    const k = await crypto.subtle.deriveKey({ name: 'PBKDF2', salt: b64(CFG.s), iterations: 150000, hash: 'SHA-256' }, km, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+    return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64(CFG.i) }, k, b64(CFG.c))));
+  } catch (e) { return null; }
+}
+if (ls.get('pin')) abrirCfg(ls.get('pin')).then(c => { cfg = c; if (!c) { ls.set('pin', ''); ls.set('vend', ''); mostrarQuien(); } });
+function mostrarQuien() {
+  const listo = ls.get('suc') && ls.get('vend') && ls.get('pin');
+  $('cardQuien').classList.toggle('hide', !!listo); $('resumenQuien').classList.toggle('hide', !listo);
+  if (listo) { $('qSuc').textContent = NOMBRE[ls.get('suc')]; $('qNom').textContent = ls.get('vend'); }
+}
+$('cambiar').onclick = () => { $('cardQuien').classList.remove('hide'); $('resumenQuien').classList.add('hide'); elegirSuc(ls.get('suc')); $('vend').value = ls.get('vend'); };
+elegirSuc(ls.get('suc')); $('vend').value = ls.get('vend'); mostrarQuien();
+$('otro').onclick = () => { $('listo').classList.add('hide'); $('form').classList.remove('hide'); ['dm','cm','contado','egresos','detalle'].forEach(i => $(i).value = ''); window.scrollTo(0, 0); };
+
+$('verEgr').onclick = () => { $('boxEgr').classList.remove('hide'); $('verEgr').classList.add('hide'); };
+
+function mostrarError(m) { $('err').textContent = m; $('err').classList.remove('hide'); $('err').scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+
+$('enviar').onclick = async () => {
+  $('err').classList.add('hide');
+  const s = $('cardQuien').classList.contains('hide') ? ls.get('suc') : suc;
+  const nombre = ($('cardQuien').classList.contains('hide') ? ls.get('vend') : $('vend').value).trim();
+  if (!s) return mostrarError('Elige dónde estás: Casa Matriz o Antonio Varas.');
+  if (!nombre) return mostrarError('Escribe tu nombre.');
+  if ($('dm').value.trim() === '' || $('cm').value.trim() === '') return mostrarError('Escribe el débito y el crédito del papel (si no hubo, pon 0).');
+  if ($('contado').value.trim() === '') return mostrarError('Escribe el efectivo que contaste (si no hay, pon 0).');
+  if (!cfg) {
+    const pin = $('pin').value.trim();
+    if (!pin) return mostrarError('Escribe la clave.');
+    cfg = await abrirCfg(pin);
+    if (!cfg) return mostrarError('Clave incorrecta.');
+    ls.set('pin', pin);
+  }
+  ls.set('suc', s); ls.set('vend', nombre); mostrarQuien();
+  const fecha = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Santiago' });
+  const egr = num($('egresos').value);
+  const txt = ['CIERRE DE CAJA',
+    'Sucursal: ' + NOMBRE[s],
+    'Fecha: ' + fecha,
+    'Vendedor: ' + nombre,
+    'Débito: ' + num($('dm').value),
+    'Crédito: ' + num($('cm').value),
+    'Efectivo contado: ' + num($('contado').value),
+    'Egresos: ' + egr + (egr && $('detalle').value.trim() ? ' (' + $('detalle').value.trim() + ')' : '')].join('\
+');
+  const url = 'https://wa.me/' + cfg.wa + '?text=' + encodeURIComponent(txt);
+  $('abrirWa').href = url;
+  // Copia al bot «Cuadre de Caja Patagonia», que lo cuadra contra Bsale. El vendedor no ve el resultado.
+  try { fetch('https://ntfy.sh/' + cfg.canal, { method: 'POST', keepalive: true, body: JSON.stringify({ suc: s, fecha: fecha, vendedor: nombre, debito: num($('dm').value), credito: num($('cm').value), contado: num($('contado').value), egresos: egr, detalle: $('detalle').value.trim() }) }).catch(() => {}); } catch (e) {}
+  $('form').classList.add('hide'); $('listo').classList.remove('hide'); window.scrollTo(0, 0);
+  $('abrirWa').click();
+};
+
+// ----- app instalable -----
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+const enApp = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+let pedirInst = null;
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); pedirInst = e; if (!enApp) { $('instalar').classList.remove('hide'); $('instBtn').classList.remove('hide'); } });
+$('instBtn').onclick = async () => { if (!pedirInst) return; pedirInst.prompt(); await pedirInst.userChoice; pedirInst = null; $('instalar').classList.add('hide'); };
+addEventListener('appinstalled', () => $('instalar').classList.add('hide'));
+if (!enApp && /iphone|ipad|ipod/i.test(navigator.userAgent)) {
+  $('instTxt').innerHTML = 'Toca <b>Compartir</b> (el cuadrado con la flecha) y luego <b>«Agregar a inicio»</b>.';
+  $('instalar').classList.remove('hide');
+}
+</script>
+</body>
+</html>
