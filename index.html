@@ -346,7 +346,12 @@ $('enviar').onclick = async () => {
 };
 
 // ----- app instalable -----
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+if ('serviceWorker' in navigator) {
+  // Si llega una versión nueva de la app, se recarga sola (una vez) para mostrarla.
+  const teniaSW = !!navigator.serviceWorker.controller; let recargado = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (teniaSW && !recargado) { recargado = true; location.reload(); } });
+  navigator.serviceWorker.register('sw.js').then(r => r.update()).catch(() => {});
+}
 const enApp = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
 let pedirInst = null;
 addEventListener('beforeinstallprompt', e => { e.preventDefault(); pedirInst = e; if (!enApp) { $('instalar').classList.remove('hide'); $('instBtn').classList.remove('hide'); } });
